@@ -1,0 +1,13 @@
+{
+  "name": "fn-api",
+  "version": "1.0.0",
+  "description": "Fn coursach: computing api",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node --type-check index.ts",
+    "repl": "ts-node --type-check"
+  },
+  "author": "bobnobrain",
+  "license": "MIT"
+}
