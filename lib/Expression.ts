@@ -1,5 +1,6 @@
 export type Predicate<T> = { (...ts: T[]): Boolean };
 export type Mapper<T, U> = { (...ts: T[]): U[] };
+export type SubMapper<T, U> = { (...ts: T[]): U };
 
 export interface Evaluable<T> {
     evalAsync(): Promise<T[]>;
@@ -12,7 +13,7 @@ export class CommonExpression<T> implements Evaluable<T> {
     then<U>(m: Mapper<T, U>): CommonExpression<U> {
         return new ChainedExpression(this, m);
     }
-    every<U>(...ms: Mapper<T, U>[]): CommonExpression<U[]> {
+    every<U>(...ms: SubMapper<T, U>[]): CommonExpression<U> {
         return new MultiplierExpression(this, ms);
     }
 
@@ -82,10 +83,10 @@ export class ChainedExpression<T, U> extends CommonExpression<U> {
     }
 }
 
-export class MultiplierExpression<T, U> extends CommonExpression<U[]> {
+export class MultiplierExpression<T, U> extends CommonExpression<U> {
     constructor(
         private source: CommonExpression<T>,
-        private ms: Mapper<T, U>[]
+        private ms: SubMapper<T, U>[]
     ) {
         super();
     }
