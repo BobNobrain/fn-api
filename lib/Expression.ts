@@ -1,18 +1,18 @@
-export type Predicate<T> = { (T): Boolean };
-export type Mapper<T, U> = { (T): U };
+export type Predicate<T> = { (...ts: T[]): Boolean };
+export type Mapper<T, U> = { (...ts: T[]): U[] };
 
 export interface Evaluable<T> {
-    evalAsync(): Promise<T>;
+    evalAsync(): Promise<T[]>;
 }
 
-export class CommonExpression<T> implements Evaluable<T[]> {
-    if(condition: Predicate<T[]>): IfExpression<T> {
+export class CommonExpression<T> implements Evaluable<T> {
+    if(condition: Predicate<T>): IfExpression<T> {
         return new IfExpression(this, condition);
     }
-    then<U>(m: Mapper<T[], U[]>): CommonExpression<U> {
+    then<U>(m: Mapper<T, U>): CommonExpression<U> {
         return new ChainedExpression(this, m);
     }
-    every<U>(...ms: Mapper<T, U>[]): CommonExpression<U> {
+    every<U>(...ms: Mapper<T, U>[]): CommonExpression<U[]> {
         return new MultiplierExpression(this, ms);
     }
 
@@ -23,8 +23,8 @@ export class CommonExpression<T> implements Evaluable<T[]> {
 
 export class IfExpression<T> {
     constructor(
-        private source: Evaluable<T[]>,
-        private condition: Predicate<T[]>
+        private source: Evaluable<T>,
+        private condition: Predicate<T>
     ) {
     }
 
@@ -35,9 +35,9 @@ export class IfExpression<T> {
 
 export class ThenExpression<T, U> {
     constructor(
-        private source: Evaluable<T[]>,
-        private condition: Predicate<T[]>,
-        private mapper: Mapper<T[], U[]>
+        private source: Evaluable<T>,
+        private condition: Predicate<T>,
+        private mapper: Mapper<T, U>
     ) {
     }
 
@@ -49,20 +49,20 @@ export class ThenExpression<T, U> {
 export class ElseExpression<T, U> extends CommonExpression<U> {
     constructor(
         private source: Evaluable<T>,
-        private condition: Predicate<T[]>,
-        private thenMapper: Mapper<T[], U[]>,
-        private elseMapper: Mapper<T[], U[]>
+        private condition: Predicate<T>,
+        private thenMapper: Mapper<T, U>,
+        private elseMapper: Mapper<T, U>
     ) {
         super();
     }
 
     public evalAsync(): Promise<U[]> {
         return this.source.evalAsync()
-            .then(source => {
-                if (this.condition(source)) {
-                    return this.thenMapper(source);
+            .then(ts => {
+                if (this.condition(...ts)) {
+                    return this.thenMapper(...ts);
                 } else {
-                    return this.elseMapper(source);
+                    return this.elseMapper(...ts);
                 }
             });
     }
@@ -70,22 +70,22 @@ export class ElseExpression<T, U> extends CommonExpression<U> {
 
 export class ChainedExpression<T, U> extends CommonExpression<U> {
     constructor(
-        private parent: Evaluable<T[]>,
-        private m: Mapper<T[], U[]>
+        private parent: Evaluable<T>,
+        private m: Mapper<T, U>
     ) {
         super();
     }
 
     evalAsync() {
         return this.parent.evalAsync()
-            .then(t => this.m(t));
+            .then(ts => this.m(...ts));
     }
 }
 
 export class MultiplierExpression<T, U> extends CommonExpression<U[]> {
     constructor(
         private source: CommonExpression<T>,
-        private ms: Mapper<T[], U[]>[]
+        private ms: Mapper<T, U>[]
     ) {
         super();
     }
@@ -93,7 +93,7 @@ export class MultiplierExpression<T, U> extends CommonExpression<U[]> {
     evalAsync() {
         return this.source.evalAsync()
             .then(
-                t => this.ms.map(fn => fn(t))
+                ts => this.ms.map(fn => fn(...ts))
             );
     }
 }
