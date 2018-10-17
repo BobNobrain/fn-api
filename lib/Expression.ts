@@ -1,3 +1,7 @@
+import Attribute from './attrs/Attribute';
+import { Class } from './Class';
+import { AttributedMapper } from './Function';
+
 type Predicate<T> = { (...ts: T[]): Boolean };
 type DirectPredicate<T> = { (T): Boolean };
 
@@ -10,6 +14,7 @@ type Zipper<T, U, V> = { (T, U): V };
 
 interface Evaluable<T> {
     evalAsync(): Promise<T[]>;
+    deriveAttributes<A extends Attribute<any>>(AC: Class<A>): A[];
 }
 
 export class CommonExpression<T> implements Evaluable<T> {
@@ -36,7 +41,7 @@ export class CommonExpression<T> implements Evaluable<T> {
         return new JoinExpression(this, values);
     }
 
-    map<U>(fn: DirectMapper<T, U>): CommonExpression<U> {
+    map<U>(fn: AttributedMapper<T, U>): CommonExpression<U> {
         return new MapExpression(this, fn);
     }
 
@@ -84,6 +89,10 @@ export class CommonExpression<T> implements Evaluable<T> {
     evalFirstAsync(): Promise<T> {
         return this.evalAsync().then(([t]) => t);
     }
+
+    deriveAttributes<A extends Attribute<any>>(AC: Class<A>): A[] {
+        throw new TypeError('Abstract method CommonExpression::deriveAttribute called!');
+    }
 }
 
 export class ValuesExpression<T> extends CommonExpression<T> {
@@ -93,6 +102,10 @@ export class ValuesExpression<T> extends CommonExpression<T> {
 
     public evalAsync(): Promise<T[]> {
         return Promise.resolve(this.values);
+    }
+
+    deriveAttributes<A extends Attribute<any>>(AC: Class<Attribute<any>>): A[] {
+        return this.values.map(v => new AC(v) as A);
     }
 }
 
@@ -190,7 +203,7 @@ class JoinExpression<T> extends CommonExpression<T> {
 class MapExpression<T, U> extends CommonExpression<U> {
     constructor(
         private source: CommonExpression<T>,
-        private fn: DirectMapper<T, U>
+        private fn: AttributedMapper<T, U>
     ) {
         super();
     }
@@ -198,6 +211,13 @@ class MapExpression<T, U> extends CommonExpression<U> {
     evalAsync() {
         return this.source.evalAsync()
             .then(ts => ts.map(this.fn));
+    }
+
+    deriveAttributes<A extends Attribute<any>>(AC: Class<A>): A[] {
+        return this.source.deriveAttributes<A>(AC).map(
+            //   this hack is inavoidable: (---------)
+            attr => attr.map(this.fn.attrs[(AC as any).attrName]) as A
+        );
     }
 }
 

@@ -1,37 +1,33 @@
-import { values } from './lib/index';
+import { values, f } from './lib/index';
+import { ParityAttribute } from './lib/attrs/ParityAttribute';
+import { SignAttribute } from './lib/attrs/SignAttribute';
 
-values(1, 2, 3)
-    .if((f, s, t) => f + t > s)
-        .then((f, s, t) => [f + t])
-        .else((f, s, t) => [s])
-    .shrink(n => n + 1)
-    .every(
-        n => n + 1,
-        n => n - 1,
-        n => n,
-        n => n ** 2
-    )
-    .map(n => n + 1)
-    .shrink((a, b, c, d) => a + b / c - d)
-    .evalFirstAsync()
-    .then(result => {
-        console.log('My example', result);
-    });
+const plus = (n1: number) => f((n2: number) => n1 + n2, {
+    parity: p => (p + n1) % 2,
+    sign: s => {
+        if (s === 0) return Math.sign(n1);
+        if (s > 0 && n1 > 0) return 1;
+        if (s < 0 && n1 < 0) return -1;
+    }
+});
 
-// values(...('abc'.split('')))
-//     .map(c => `"${c}"`)
-//     .shrink((a, b, c) => [c, b, a])
-//     .evalAsync()
-//     .then(results => console.log(results));
+const mulBy = (a: number) => f((b: number) => a * b, {
+    parity: p => (a % 2 === 0) ? 0 : p,
+    sign: s => Math.sign(a) * s
+});
 
-const computation = values(2, 3)
-    .every(
-        (a, b) => ((a + b)/2) ** 2,
-        (a, b) => ((a - b)/2) ** 2,
-        (a, b) => Math.max(a, b),
-        (a, b) => Math.min(a, b)
-    )
-    .then<number>((halfSum, halfDiff, mx, mn) => [(halfSum + halfDiff)*mx/mn]);
+const computationTree = values(1, 2, 3)
+    .map(mulBy(2))
+    .map(plus(1));
 
-computation.evalAsync()
-    .then(([v]) => console.log('Documentation example', v));
+const attributes = computationTree.deriveAttributes<ParityAttribute>(ParityAttribute);
+
+console.log(attributes.join(', '));
+
+console.log(
+    values(-10, 10, 20, -20, 0)
+        .map(plus(10))
+        .map(mulBy(-1))
+        .deriveAttributes<SignAttribute>(SignAttribute)
+        .join(', ')
+);
