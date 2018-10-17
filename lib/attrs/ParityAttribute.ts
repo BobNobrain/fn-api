@@ -5,7 +5,7 @@ export type Parity = 0 | 1;
 export class ParityAttribute extends Attribute<Parity> {
     public static readonly attrName = 'parity';
 
-    constructor(value: Parity) {
+    constructor(value: any) {
         let v: Parity | void = undefined;
         if (typeof value === typeof 0) v = (value % 2) as Parity;
         super(v);

@@ -5,7 +5,7 @@ export type Sign = -1 | 0 | 1;
 export class SignAttribute extends Attribute<Sign> {
     public static readonly attrName = 'sign';
 
-    constructor(value: Sign) {
+    constructor(value: any) {
         let v: Sign | void = undefined;
         if (typeof value === typeof 0) {
             v = Math.sign(value) as Sign;
