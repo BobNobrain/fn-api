@@ -15,6 +15,7 @@ const computationTree =
             plus,
             values(2, 3, 4)
         )
+        .fold(plus, 0)
 
         // .map(mulBy(2));
 
