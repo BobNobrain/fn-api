@@ -6,8 +6,10 @@ const { plus, mulBy } = require('./lib/fns');
 
 const computationTree =
     values(1, 2, 3)
-        .map(mulBy(2))
-        .map(plus(1));
+        .if(() => Math.random() > 0.5)
+            .then(mulBy(3))
+            .else(mulBy(4))
+        // .map(mulBy(2));
 
 const attributes = computationTree.deriveAttributes(ParityAttribute);
 console.log(attributes.join(', '));
