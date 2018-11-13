@@ -2,16 +2,13 @@
   "name": "fn-api",
   "version": "1.0.0",
   "description": "Fn coursach: computing api",
-  "main": "index.ts",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node --type-check index.ts",
-    "repl": "ts-node --type-check"
+    "start": "node index.js"
   },
   "author": "bobnobrain",
   "license": "MIT",
   "dependencies": {
-    "ts-node": "^7.0.1",
-    "typescript": "^3.1.1"
   }
 }
