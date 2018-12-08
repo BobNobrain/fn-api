@@ -10,5 +10,6 @@
   "author": "bobnobrain",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.18.0"
   }
 }
