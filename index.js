@@ -1,33 +1,27 @@
 const { values } = require('./lib/index');
 const ParityAttribute = require('./lib/attrs/ParityAttribute');
-const SignAttribute = require ('./lib/attrs/SignAttribute');
+// const SignAttribute = require ('./lib/attrs/SignAttribute');
+const { plus, multiply } = require('./lib/func/arithmetics');
 
-const { plus, multiple } = require('./lib/func/arithmetics');
+const randomOrgValues = require('./random');
 
 const computationTree =
-    values(1, 2, 3)
+    randomOrgValues(10)
         .map(plus.partial(2))
         .if(() => Math.random() > 0.5)
-            .then(multiple.partial(3))
-            .else(multiple.partial(4))
+            .then(multiply.partial(3))
+            .else(multiply.partial(4))
 
         .zipWith(
-            plus,
-            values(2, 3, 4)
+            multiply,
+            values(2, 3, 4, 5, 6, 7, 9, 10, 11, 22)
         )
-        // .fold(plus, 0)
-
-        // .map(mulBy(2));
+;
 
 const attributes = computationTree.deriveAttributes(ParityAttribute);
 console.log(attributes.join(', '));
 
-// computationTree.evalFirstAsync().then(x => console.log('Result ', x));
-
-// console.log(
-//     values(-10, 10, 20, -20, 0)
-//         .map(plus.partial(10))
-//         .map(mulBy(-1))
-//         .deriveAttributes(SignAttribute)
-//         .join(', ')
-// );
+computationTree.evalAsync()
+    .then(values => console.log(values.join(', ')))
+    .catch(error => console.error(error))
+;
